@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import { FlexRowContainer } from "./components";
-
+import axios from "axios";
 const FlexRowChildContainer = ({ children }) => {
   return <div style={{ flex: 1 }}>{children}</div>;
 };
@@ -74,6 +74,27 @@ const EnergyForm = () => {
     console.log(formData);
     // Here you would typically send the formData to a server
   };
+
+  useEffect(() => {
+    let config = {
+      method: "get",
+      maxBodyLength: Infinity,
+      url: "https://gateway.eg-on.com/cities/07745",
+      headers: {
+        Authorization:
+         
+      }
+    };
+
+    axios
+      .request(config)
+      .then((response) => {
+        console.log(JSON.stringify(response.data));
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
 
   return (
     <form onSubmit={handleSubmit} className="energy-form">
