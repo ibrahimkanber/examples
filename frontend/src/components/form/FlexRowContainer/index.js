@@ -1,4 +1,4 @@
-
+import "./index.css"
 export const FlexRowContainer = ({ children }) => {
-  return <div className="Button">{children}</div>;
+  return <div className="row-container">{children}</div>;
 };

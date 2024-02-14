@@ -1,9 +1,7 @@
-
-.Button {
-    color: blue;
-    flex-direction: row;
-    gap: 8px;
-  }
-  
-  
-  
+.row-container {
+  display: flex;
+  margin: 5px;
+  align-items: center;
+  gap:16px;
+  justify-content: space-between;
+}
