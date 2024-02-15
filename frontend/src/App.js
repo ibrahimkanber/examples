@@ -1,58 +1,51 @@
-import React, { useEffect, useState } from "react";
-import { FlexRowContainer } from "./components";
-import axios from "axios";
-import { DropDown } from "./components/form/DropDown";
+import React, { useState } from "react";
+import {
+  DropDown,
+  FlexRowContainer,
+  FormSectionHeader,
+  SubmitButton,
+} from "./components";
 import "./App.css";
-import { Person } from "./components/icons/Person";
+import {
+  countyIdType,
+  customerType,
+  orderType,
+  rateChangeType,
+  streetOptionType,
+} from "./config/formEnums";
+import { RateChange } from "./components/form/Sections/RateChange";
+import { OrderAndCustomerType } from "./components/form/Sections/OrderAndCustomerType";
+import { Consum } from "./components/form/Sections/Consum";
+import { tarifServices } from "./services";
+import { ConsumButtons } from "./components/form/Sections/ConsumButtons";
 
-const ConsumeButton = ({ personCount = 1, onClick }) => {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        flex: 1,
-        backgroundColor: "white",
-        color: "black",
-        border: "1px solid gray",
-        justifyContent: "space-between",
-      }}
-    >
-      {[...Array(personCount).keys()].map((el) => (
-        <Person />
-      ))}
-    </button>
-  );
-};
-
-const SubmitButton = ({ label = "submiasdsat" }) => {
-  return (
-    <button style={{ flex: 1, width: "100%" }} type="submit">
-      {label}
-    </button>
-  );
-};
-
-const FormSectionTitle = ({ label }) => {
-  return <h2>{label}</h2>;
-};
 const EnergyForm = () => {
   const [formData, setFormData] = useState({
-    supplierChange: "default",
-    type: "private",
-    country: "Germany",
-    postalCode: "",
+    rate_change_type: rateChangeType.CHANGE.value,
+    order_type: orderType.ELECTRIC.value,
+    customer_type: customerType.PRIVATE.value,
+    country_id: countyIdType.GERMANY.value,
+    postal_code: "",
     city: "",
     street: "",
-    streetNumber: "",
-    networkOperator: "default",
-    consumption: "",
-    consumptionNT: "",
+    street_number: "",
+    network_operator: "default",
+    consum: 0,
+    consum_nt: "",
+    streets: streetOptionType,
   });
 
   const handleInputChange = (e) => {
+    if (e.target.id === "postal_code") {
+      console.log("jasdjas");
+      getCity(e.target.value);
+    }
+    if (e.target.id === "street_number") {
+      getOrderProviderNetzList(e.target.value);
+    }
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.id]: e.target.value,
     });
   };
 
@@ -62,114 +55,97 @@ const EnergyForm = () => {
     // Here you would typically send the formData to a server
   };
 
-  useEffect(() => {
-    let config = {
-      method: "get",
-      maxBodyLength: Infinity,
-      url: "https://gateway.eg-on.com/cities/07745",
-      headers: {
-        Authorization:
-          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ2WGZMQ05DRTJ5SEpaQUV5UiIsImFwcElkIjoia0ZNelk5WkRxb2s1NUVIYXciLCJzZXJ2aWNlTmFtZSI6IlVzZXJTZXJ2aWNlIiwiZWdvbkFwaUtleSI6IjgyYjk2MjMyYjQyMTA4ZjdmZGJiMjY3YTg5NjQxOWIyIiwiaWF0IjoxNTUwODQ5NTIxfQ.ht-LPAhxwTnbdUn3uBYwuayib-YRfZi8r3qNQWmTTl8",
-      },
-    };
+  const getCity = async (postal_code) => {
+    const isCityFetchRequire =
+      (formData.country_id == countyIdType.GERMANY.value &&
+        postal_code.length == 5) ||
+      (formData.country_id == countyIdType.AUSTRIA.value &&
+        postal_code.length == 4);
+    if (!isCityFetchRequire) {
+      return;
+    }
 
-    axios
-      .request(config)
-      .then((response) => {
-        console.log(JSON.stringify(response.data));
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }, []);
+    try {
+      const cityResponse = await tarifServices.getCities(
+        postal_code,
+        formData.country_id
+      );
+      const city = cityResponse?.data?.result[0]?.city ?? "";
+      const streetsResponse = await tarifServices.getStreets(
+        postal_code,
+        city,
+        formData.country_id
+      );
+      const formattedStreets = streetsResponse.data.result.map((el) => ({
+        value: el.street,
+        label: el.street,
+      }));
+      setFormData((prev) => ({ ...prev, city, streets: formattedStreets }));
+    } catch (error) {}
+  };
+  const getOrderProviderNetzList = async (house_number) => {
+    try {
+      /*    const cityResponse = axios.request({
+        ...api_config,
+
+        url: `/rates/?zip=${formData.postal_code}&city=${formData.city}&street=${formData.street}&houseNumber=124&type=${formData.customer_type}&branch=${formData.order_type}&country=${formData.country_id}`,
+      }); */
+    } catch (error) {}
+  };
 
   return (
     <form onSubmit={handleSubmit} className="energy-form">
-      <FormSectionTitle label="Berechnungsbasis" />
-      <FlexRowContainer>
-        {/* 1 */}
-        <DropDown
-          onChange={() => null}
-          options={[
-            { label: "Liefer bilmemmneyi", value: "liefer" },
-            { label: "Ibrahim", value: "ibrahim" },
-          ]}
-        />
-      </FlexRowContainer>
+      <FormSectionHeader label="Berechnungsbasis" />
+      <RateChange formData={formData} handleInputChange={handleInputChange} />
+      <OrderAndCustomerType
+        formData={formData}
+        handleInputChange={handleInputChange}
+      />
 
-      {/* 2 */}
       <FlexRowContainer>
-        <DropDown
-          onChange={() => null}
-          options={[
-            { label: "Liefer bilmemmneyi", value: "liefer" },
-            { label: "Ibrahim", value: "ibrahim" },
-          ]}
+        <input
+          placeholder="PLZ"
+          value={formData.postal_code}
+          type="number"
+          min={0}
+          id="postal_code"
+          onChange={handleInputChange}
         />
 
         <DropDown
-          onChange={() => null}
-          options={[
-            { label: "Liefer bilmemmneyi", value: "liefer" },
-            { label: "Ibrahim", value: "ibrahim" },
-          ]}
+          id="city"
+          onChange={handleInputChange}
+          options={[{ label: formData.city, value: formData.city }]}
         />
-      </FlexRowContainer>
-      {/* 3 */}
-      <FlexRowContainer>
-        <DropDown
-          onChange={() => null}
-          options={[
-            { label: "Liefer bilmemmneyi", value: "liefer" },
-            { label: "Ibrahim", value: "ibrahim" },
-          ]}
-        />
-      </FlexRowContainer>
-      {/* 4 */}
-      <FlexRowContainer>
-        <input placeholder="PLZ" style={{ fontSize: "18px" }} />
-
-        <DropDown
-          onChange={() => null}
-          options={[
-            { label: "Liefer bilmemmneyi", value: "liefer" },
-            { label: "Ibrahim", value: "ibrahim" },
-          ]}
-        />
-      </FlexRowContainer>
-      {/* 5 */}
-      <FlexRowContainer>
-        <DropDown
-          onChange={() => null}
-          options={[
-            { label: "Liefer bilmemmneyi", value: "liefer" },
-            { label: "Ibrahim", value: "ibrahim" },
-          ]}
-        />
-        <input placeholder="Nr" style={{ fontSize: "18px" }} />
-      </FlexRowContainer>
-      {/* 6 */}
-      <FlexRowContainer>
-        <DropDown
-          onChange={() => null}
-          options={[
-            { label: "Liefer bilmemmneyi", value: "liefer" },
-            { label: "Ibrahim", value: "ibrahim" },
-          ]}
-        />
-      </FlexRowContainer>
-      <FormSectionTitle label="Verbrauch" />
-      <FlexRowContainer>
-        <ConsumeButton personCount={1} onClick={() => null} />
-        <ConsumeButton personCount={2} onClick={() => null} />
-        <ConsumeButton personCount={3} onClick={() => null} />
-        <ConsumeButton personCount={4} onClick={() => null} />
       </FlexRowContainer>
 
       <FlexRowContainer>
-        <input defaultValue={3400} style={{ fontSize: "18px" }} className="input-full" />
-        <input placeholder="NT (kWh/Jahr)" style={{ fontSize: "18px" }} className="input-full" />
+        <DropDown
+          id="street"
+          value={formData.street}
+          onChange={handleInputChange}
+          options={formData.streets}
+        />
+        <input
+          placeholder="Nr"
+          value={formData.street_number}
+          type="number"
+          min={0}
+          id="street_number"
+          onChange={handleInputChange}
+        />
       </FlexRowContainer>
+      <FlexRowContainer>
+        <DropDown
+          value={formData.network_operator}
+          id="network_operator"
+          onChange={handleInputChange}
+          options={[{ label: "", value: "" }]}
+        />
+      </FlexRowContainer>
+      <FormSectionHeader label="Verbrauch" />
+      <ConsumButtons setFormData={setFormData} />
+      <Consum formData={formData} handleInputChange={handleInputChange} />
       <SubmitButton label="Calculate" />
     </form>
   );

@@ -1,0 +1,6 @@
+.consume-button{
+    flex: 1;
+    border:1px solid gray;
+    color: black;
+    justify-content:space-between ,
+}
