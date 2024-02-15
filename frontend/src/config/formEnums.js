@@ -30,3 +30,4 @@ export const customerTypeOptions = [
 ];
 export const countyIdOptions = [countyIdType.GERMANY, countyIdType.AUSTRIA];
 export const streetOptionType = [{ value: "", label: "Select" }];
+export const netzProviderOptionType = [{ value: "", label: "Select" }];

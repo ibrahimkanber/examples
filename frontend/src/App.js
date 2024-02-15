@@ -9,6 +9,7 @@ import "./App.css";
 import {
   countyIdType,
   customerType,
+  netzProviderOptionType,
   orderType,
   rateChangeType,
   streetOptionType,
@@ -33,6 +34,7 @@ const EnergyForm = () => {
     consum: 0,
     consum_nt: "",
     streets: streetOptionType,
+    netz_providers: netzProviderOptionType,
   });
 
   const handleInputChange = (e) => {
@@ -85,11 +87,17 @@ const EnergyForm = () => {
   };
   const getOrderProviderNetzList = async (house_number) => {
     try {
-      /*    const cityResponse = axios.request({
-        ...api_config,
-
-        url: `/rates/?zip=${formData.postal_code}&city=${formData.city}&street=${formData.street}&houseNumber=124&type=${formData.customer_type}&branch=${formData.order_type}&country=${formData.country_id}`,
-      }); */
+      const netztProviderResponse = await tarifServices.getProviderList(
+        formData,
+        124
+      );
+      const formattedProviders = netztProviderResponse?.data?.result.map(
+        (n) => ({
+          value: n.netzId,
+          label: n.netzName,
+        })
+      );
+      setFormData((prev) => ({ ...prev, netz_providers: formattedProviders }));
     } catch (error) {}
   };
 
@@ -140,7 +148,7 @@ const EnergyForm = () => {
           value={formData.network_operator}
           id="network_operator"
           onChange={handleInputChange}
-          options={[{ label: "", value: "" }]}
+          options={formData.netz_providers}
         />
       </FlexRowContainer>
       <FormSectionHeader label="Verbrauch" />
